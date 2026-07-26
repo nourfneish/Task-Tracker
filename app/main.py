@@ -10,14 +10,6 @@ from app.business_rules import validate_status_transition
 from app.models import TaskCreate, TaskPriority, TaskResponse, TaskStatus, TaskUpdate, ActivityAction, ActivityEvent
 from app.core.config import settings
 
-from app.models import TaskStatus, TaskPriority, TaskResponse
-from app.models import TaskCreate, TaskPriority, TaskResponse, TaskStatus, TaskUpdate, ActivityAction, ActivityEvent
-from app.business_rules import validate_status_transition
-from fastapi import status
-from app.models import TaskCreate, TaskResponse
-from app import storage
-
-
 
 # Create the FastAPI app instance.
 app = FastAPI(
@@ -46,6 +38,7 @@ def list_tasks(
         ]
     return tasks
 
+
 @app.post("/tasks", response_model=TaskResponse, status_code=status.HTTP_201_CREATED, tags=["tasks"])
 def create_task(payload: TaskCreate) -> TaskResponse:
     task = storage.add_task(payload)
@@ -57,45 +50,13 @@ def create_task(payload: TaskCreate) -> TaskResponse:
     return task
 
 
-
-@app.patch("/tasks/{task_id}", response_model=TaskResponse, tags=["tasks"])
-def update_task(task_id: str, payload: TaskUpdate) -> TaskResponse:
-    existing = storage.get_task_by_id(task_id)
-    task = storage.update_task(task_id, payload)
-    if task is None:
-        raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
-    updates = payload.model_dump(exclude_unset=True)
-    if updates and existing is not None:
-        status_changed = (
-            "status" in updates and updates["status"] != existing.status
-        )
-        if status_changed:
-            storage.log_activity(
-                task_id,
-                ActivityAction.STATUS_CHANGED,
-                f"Status changed from {existing.status.value} to {task.status.value}",
-            )
-        elif any(key != "status" for key in updates):
-            storage.log_activity(
-                task_id,
-                ActivityAction.UPDATED,
-                f"Task '{task.title}' updated",
-            )
-    return task
-
-# No imports to add — HTTPException, status, and storage are already imported.
-
-@app.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["tasks"])
-def delete_task(task_id: str) -> None:
+@app.get("/tasks/{task_id}", response_model=TaskResponse, tags=["tasks"])
+def get_task(task_id: str) -> TaskResponse:
     task = storage.get_task_by_id(task_id)
     if task is None:
         raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
-    storage.log_activity(
-        task_id,
-        ActivityAction.DELETED,
-        f"Task '{task.title}' deleted",
-    )
-    storage.delete_task(task_id)
+    return task
+
 
 @app.patch("/tasks/{task_id}", response_model=TaskResponse, tags=["tasks"])
 def update_task(task_id: str, payload: TaskUpdate) -> TaskResponse:
@@ -127,6 +88,19 @@ def update_task(task_id: str, payload: TaskUpdate) -> TaskResponse:
     return task
 
 
+@app.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["tasks"])
+def delete_task(task_id: str) -> None:
+    task = storage.get_task_by_id(task_id)
+    if task is None:
+        raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
+    storage.log_activity(
+        task_id,
+        ActivityAction.DELETED,
+        f"Task '{task.title}' deleted",
+    )
+    storage.delete_task(task_id)
+
+
 @app.get("/activity", response_model=list[ActivityEvent], tags=["activity"])
 def list_activity() -> list[ActivityEvent]:
     return storage.get_all_activity()
@@ -154,5 +128,3 @@ app.add_middleware(
 
 # Register the health check route.
 app.include_router(health_router)
-
-# ...existing code...
