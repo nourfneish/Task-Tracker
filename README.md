@@ -4,7 +4,7 @@ A REST API for tracking tasks, built with Python and FastAPI. This repository cu
 
 ## Setup
 
-### 1. Create a virtual environment and install dependencies
+1. Create a virtual environment and install dependencies
 
 **Linux/macOS:**
 \`\`\`bash
@@ -20,33 +20,14 @@ venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 \`\`\`
 
-### 2. Configure environment variables
-
-Copy `.env.example` to `.env` and adjust values as needed:
-
-\`\`\`bash
-cp .env.example .env
-\`\`\`
-
 ## Running the server
 
 \`\`\`bash
 uvicorn app.main:app --reload --port 8000
 \`\`\`
-
 The API will be available at `http://localhost:8000`.
 
-## Testing the health endpoint
+## Running front end
+cd frontend    
+python -m http.server 5500 
 
-\`\`\`bash
-curl http://localhost:8000/health
-\`\`\`
-
-Expected response:
-
-\`\`\`json
-{
-  "status": "ok",
-  "timestamp": "2026-07-13T12:00:00.000000+00:00"
-}
-\`\`\`
