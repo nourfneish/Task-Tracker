@@ -63,6 +63,56 @@ def test_list_tasks_filter_by_priority_returns_only_matches(client):
     assert all(task["priority"] == "High" for task in tasks)
 
 
+def test_list_tasks_search_matches_title(client):
+    client.post("/tasks", json={"title": "Fix login bug", "description": "Unrelated"})
+    client.post("/tasks", json={"title": "Update docs", "description": "No match here"})
+
+    response = client.get("/tasks", params={"search": "login"})
+    assert response.status_code == 200
+    tasks = response.json()
+    assert len(tasks) == 1
+    assert tasks[0]["title"] == "Fix login bug"
+
+
+def test_list_tasks_search_matches_description(client):
+    client.post("/tasks", json={"title": "Task A", "description": "Implement OAuth login"})
+    client.post("/tasks", json={"title": "Task B", "description": "Write unit tests"})
+
+    response = client.get("/tasks", params={"search": "oauth"})
+    assert response.status_code == 200
+    tasks = response.json()
+    assert len(tasks) == 1
+    assert tasks[0]["title"] == "Task A"
+
+
+def test_list_tasks_combined_status_and_priority_filters(client):
+    client.post("/tasks", json={"title": "match", "status": "ToDo", "priority": "High"})
+    client.post("/tasks", json={"title": "wrong priority", "status": "ToDo", "priority": "Low"})
+    client.post("/tasks", json={"title": "wrong status", "status": "Done", "priority": "High"})
+
+    response = client.get("/tasks", params={"status": "ToDo", "priority": "High"})
+    assert response.status_code == 200
+    tasks = response.json()
+    assert len(tasks) == 1
+    assert tasks[0]["title"] == "match"
+
+
+def test_list_tasks_search_no_matches_returns_200_and_empty_list(client, created_task):
+    response = client.get("/tasks", params={"search": "nonexistent-term"})
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_list_tasks_invalid_status_returns_422(client):
+    response = client.get("/tasks", params={"status": "InvalidStatus"})
+    assert response.status_code == 422
+
+
+def test_list_tasks_invalid_priority_returns_422(client):
+    response = client.get("/tasks", params={"priority": "Urgent"})
+    assert response.status_code == 422
+
+
 def test_get_task_by_id_returns_task(client, created_task):
     response = client.get(f"/tasks/{created_task['id']}")
     assert response.status_code == 200

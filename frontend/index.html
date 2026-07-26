@@ -61,7 +61,7 @@
             justify-content: space-between;
             align-items: center;
             gap: 1rem;
-            max-width: 1180px;
+            max-width: 1480px;
             margin: 0 auto;
         }
 
@@ -100,8 +100,155 @@
 
         main {
             padding: 2rem 2.5rem 3rem;
-            max-width: 1180px;
+            max-width: 1480px;
             margin: 0 auto;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 300px;
+            gap: 1.25rem;
+            align-items: start;
+        }
+
+        .activity-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            box-shadow: var(--shadow-soft);
+            position: sticky;
+            top: 1rem;
+        }
+
+        .activity-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .activity-panel-header h2 {
+            margin: 0;
+            font-size: 1.05rem;
+            color: #152e4d;
+        }
+
+        .activity-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .activity-item {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(217, 226, 236, 0.8);
+        }
+
+        .activity-item:last-child {
+            border-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .activity-item:first-child {
+            padding-top: 0;
+        }
+
+        .activity-action {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #1f3a5f;
+        }
+
+        .activity-details {
+            margin: 0.25rem 0 0.35rem;
+            font-size: 0.88rem;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .activity-time {
+            font-size: 0.8rem;
+            color: #6b8299;
+        }
+
+        .task-activity-section {
+            border-top: 1px solid var(--border);
+            padding-top: 1rem;
+            margin-top: 0.25rem;
+        }
+
+        .task-activity-section h3 {
+            margin: 0 0 0.75rem;
+            font-size: 0.98rem;
+            color: #152e4d;
+        }
+
+        .task-activity-section .activity-list {
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .activity-state {
+            color: #4f6d8d;
+            font-size: 0.9rem;
+        }
+
+        .activity-state-error {
+            color: #991b1b;
+            font-size: 0.9rem;
+        }
+
+        .board-area {
+            min-width: 0;
+        }
+
+        .filter-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+            padding: 0.75rem 1rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .filter-bar input[type="search"],
+        .filter-bar select,
+        .filter-bar input[type="text"] {
+            border: 1px solid rgba(82, 102, 122, 0.15);
+            border-radius: 14px;
+            padding: 0.55rem 0.85rem;
+            font: inherit;
+            color: var(--text);
+            background: #f9fbff;
+            transition: border-color 180ms ease, box-shadow 180ms ease;
+        }
+
+        .filter-bar input[type="search"]:focus,
+        .filter-bar select:focus,
+        .filter-bar input[type="text"]:focus {
+            outline: none;
+            border-color: rgba(47, 108, 229, 0.37);
+            box-shadow: 0 0 0 4px rgba(47, 108, 229, 0.08);
+        }
+
+        .filter-search {
+            flex: 1 1 180px;
+            min-width: 140px;
+        }
+
+        .filter-bar select {
+            flex: 0 1 auto;
+        }
+
+        .filter-clear-button[disabled] {
+            opacity: 0.45;
+            cursor: not-allowed;
         }
 
         .board {
@@ -317,6 +464,7 @@
             justify-content: center;
             padding: 1rem;
             z-index: 1000;
+            overflow-y: auto;
         }
 
         .modal-overlay.hidden {
@@ -325,11 +473,67 @@
 
         .modal-dialog {
             width: min(100%, 580px);
+            max-height: calc(100vh - 2rem);
+            overflow-y: auto;
             background: rgba(255, 255, 255, 0.98);
             border-radius: 24px;
             box-shadow: 0 32px 80px rgba(15, 23, 42, 0.14);
             border: 1px solid rgba(13, 48, 91, 0.06);
             padding: 1.35rem;
+        }
+
+        .modal-dialog.modal-dialog--compact {
+            width: min(100%, 500px);
+            padding: 1rem 1.1rem;
+        }
+
+        .modal-dialog--compact .modal-header {
+            margin-bottom: 0.75rem;
+        }
+
+        .modal-dialog--compact .modal-header h2 {
+            font-size: 1.05rem;
+        }
+
+        .modal-dialog--compact .modal-form {
+            gap: 0.75rem;
+        }
+
+        .modal-dialog--compact .form-field label {
+            font-size: 0.88rem;
+        }
+
+        .modal-dialog--compact .form-field input,
+        .modal-dialog--compact .form-field select,
+        .modal-dialog--compact .form-field textarea {
+            padding: 0.65rem 0.85rem;
+        }
+
+        .modal-dialog--compact .form-field textarea {
+            min-height: 72px;
+        }
+
+        .modal-dialog--compact .task-activity-section {
+            padding-top: 0.75rem;
+            margin-top: 0;
+        }
+
+        .modal-dialog--compact .task-activity-section h3 {
+            margin-bottom: 0.5rem;
+            font-size: 0.92rem;
+        }
+
+        .modal-dialog--compact .task-activity-section .activity-list {
+            max-height: 110px;
+        }
+
+        .modal-dialog--compact .modal-actions {
+            margin-top: 0.15rem;
+        }
+
+        .modal-dialog--compact .cancel-button,
+        .modal-dialog--compact .submit-button {
+            padding: 0.7rem 1rem;
         }
 
         .modal-header {
@@ -456,6 +660,14 @@
         }
 
         @media (max-width: 900px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .activity-panel {
+                position: static;
+            }
+
             .board {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
@@ -503,7 +715,48 @@
     </header>
 
     <main>
-        <section id="board" class="board" aria-live="polite"></section>
+        <div class="main-layout">
+            <div class="board-area">
+                <div class="filter-bar" role="search">
+                    <input
+                        type="search"
+                        id="filter-search"
+                        class="filter-search"
+                        placeholder="Search tasks…"
+                        aria-label="Search tasks"
+                    />
+                    <select id="filter-status" aria-label="Filter by status">
+                        <option value="">All statuses</option>
+                        <option value="ToDo">To Do</option>
+                        <option value="InProgress">In Progress</option>
+                        <option value="Done">Done</option>
+                    </select>
+                    <select id="filter-priority" aria-label="Filter by priority">
+                        <option value="">All priorities</option>
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                    <input
+                        type="text"
+                        id="filter-assignee"
+                        placeholder="Assignee"
+                        aria-label="Filter by assignee"
+                    />
+                    <button type="button" id="filter-clear-button" class="edit-button filter-clear-button" disabled>Clear</button>
+                </div>
+                <section id="board" class="board" aria-live="polite"></section>
+            </div>
+            <aside id="activity-panel" class="activity-panel" aria-live="polite">
+                <div class="activity-panel-header">
+                    <h2>Recent Activity</h2>
+                    <button type="button" id="activity-refresh-button" class="edit-button">Refresh</button>
+                </div>
+                <div id="activity-list" class="activity-list-wrap">
+                    <p class="activity-state">Loading activity…</p>
+                </div>
+            </aside>
+        </div>
     </main>
 
     <div id="task-modal" class="modal-overlay hidden" aria-hidden="true">
@@ -545,6 +798,12 @@
                     <label for="task-assignee">Assignee</label>
                     <input id="task-assignee" name="assignee" type="text" />
                 </div>
+                <div id="task-activity-section" class="task-activity-section" hidden>
+                    <h3>Activity</h3>
+                    <div id="task-activity-list">
+                        <p class="activity-state">Loading activity…</p>
+                    </div>
+                </div>
                 <div id="task-form-error" class="form-error" hidden></div>
                 <div class="modal-actions">
                     <button type="button" class="cancel-button" id="task-modal-cancel">Cancel</button>
@@ -578,9 +837,22 @@
         let boardFeedback = "";
         let draggedTaskId = null;
         let modalMode = "create";
+        let searchDebounceTimer = null;
+        const filterState = {
+            search: "",
+            status: "",
+            priority: "",
+            assignee: ""
+        };
         const board = document.getElementById("board");
+        const filterSearch = document.getElementById("filter-search");
+        const filterStatus = document.getElementById("filter-status");
+        const filterPriority = document.getElementById("filter-priority");
+        const filterAssignee = document.getElementById("filter-assignee");
+        const filterClearButton = document.getElementById("filter-clear-button");
         const newTaskButton = document.getElementById("new-task-button");
         const taskModal = document.getElementById("task-modal");
+        const taskModalDialog = taskModal.querySelector(".modal-dialog");
         const taskModalForm = document.getElementById("task-modal-form");
         const taskModalTitle = document.getElementById("task-title");
         const taskModalDescription = document.getElementById("task-description");
@@ -592,6 +864,17 @@
         const taskModalFormError = document.getElementById("task-form-error");
         const taskModalCloseButton = document.getElementById("task-modal-close");
         const taskModalCancelButton = document.getElementById("task-modal-cancel");
+        const activityList = document.getElementById("activity-list");
+        const activityRefreshButton = document.getElementById("activity-refresh-button");
+        const taskActivitySection = document.getElementById("task-activity-section");
+        const taskActivityList = document.getElementById("task-activity-list");
+
+        const ACTIVITY_ACTION_LABELS = {
+            created: "Created",
+            updated: "Updated",
+            deleted: "Deleted",
+            status_changed: "Status changed"
+        };
 
         function escapeHtml(value) {
             return String(value ?? "")
@@ -600,6 +883,99 @@
                 .replace(/>/g, "&gt;")
                 .replace(/\"/g, "&quot;")
                 .replace(/'/g, "&#39;");
+        }
+
+        function formatActivityAction(action) {
+            return ACTIVITY_ACTION_LABELS[action] || String(action ?? "").replace(/_/g, " ");
+        }
+
+        function formatActivityTime(isoString) {
+            const date = new Date(isoString);
+            if (Number.isNaN(date.getTime())) {
+                return isoString || "";
+            }
+
+            const now = new Date();
+            const diffMs = now - date;
+            const diffSec = Math.floor(diffMs / 1000);
+            const diffMin = Math.floor(diffSec / 60);
+            const diffHour = Math.floor(diffMin / 60);
+            const diffDay = Math.floor(diffHour / 24);
+
+            if (diffSec < 60) {
+                return "Just now";
+            }
+            if (diffMin < 60) {
+                return `${diffMin} min ago`;
+            }
+            if (diffHour < 24) {
+                return `${diffHour} hr ago`;
+            }
+            if (diffDay < 7) {
+                return `${diffDay} day${diffDay === 1 ? "" : "s"} ago`;
+            }
+
+            return date.toLocaleString(undefined, {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+                hour: "numeric",
+                minute: "2-digit"
+            });
+        }
+
+        function renderActivityMarkup(events) {
+            if (!events.length) {
+                return '<div class="empty-placeholder">No activity yet.</div>';
+            }
+
+            return `
+                <ul class="activity-list">
+                    ${events.map((event) => `
+                        <li class="activity-item">
+                            <div class="activity-action">${escapeHtml(formatActivityAction(event.action))}</div>
+                            <div class="activity-details">${escapeHtml(event.details || "")}</div>
+                            <time class="activity-time" datetime="${escapeHtml(event.timestamp)}">${escapeHtml(formatActivityTime(event.timestamp))}</time>
+                        </li>
+                    `).join("")}
+                </ul>
+            `;
+        }
+
+        async function fetchActivity() {
+            activityList.innerHTML = '<p class="activity-state">Loading activity…</p>';
+
+            try {
+                const response = await fetch(`${API_BASE}/activity`);
+                if (!response.ok) {
+                    throw new Error(`Request failed with status ${response.status}`);
+                }
+
+                const data = await response.json();
+                const events = Array.isArray(data) ? data : [];
+                activityList.innerHTML = renderActivityMarkup(events);
+            } catch (error) {
+                console.error("Failed to load activity", error);
+                activityList.innerHTML = '<p class="activity-state-error">Could not load activity.</p>';
+            }
+        }
+
+        async function fetchTaskActivity(taskId) {
+            taskActivityList.innerHTML = '<p class="activity-state">Loading activity…</p>';
+
+            try {
+                const response = await fetch(`${API_BASE}/tasks/${taskId}/activity`);
+                if (!response.ok) {
+                    throw new Error(`Request failed with status ${response.status}`);
+                }
+
+                const data = await response.json();
+                const events = Array.isArray(data) ? data : [];
+                taskActivityList.innerHTML = renderActivityMarkup(events);
+            } catch (error) {
+                console.error("Failed to load task activity", error);
+                taskActivityList.innerHTML = '<p class="activity-state-error">Could not load activity.</p>';
+            }
         }
 
         function sortTasks(taskList) {
@@ -639,17 +1015,23 @@
             modalMode = mode;
             clearModalErrors();
             resetTaskForm();
+            taskActivitySection.hidden = true;
+            taskActivityList.innerHTML = "";
 
             if (mode === "edit" && task) {
                 document.getElementById("task-modal-title").textContent = "Edit Task";
+                taskModalDialog.classList.add("modal-dialog--compact");
                 taskModalTaskId.value = task.id;
                 taskModalTitle.value = task.title || "";
                 taskModalDescription.value = task.description || "";
                 taskModalStatus.value = task.status || "ToDo";
                 taskModalPriority.value = task.priority || "Medium";
                 taskModalAssignee.value = task.assignee || "";
+                taskActivitySection.hidden = false;
+                fetchTaskActivity(task.id);
             } else {
                 document.getElementById("task-modal-title").textContent = "New Task";
+                taskModalDialog.classList.remove("modal-dialog--compact");
             }
 
             taskModal.classList.remove("hidden");
@@ -660,6 +1042,9 @@
         function closeModal() {
             clearModalErrors();
             resetTaskForm();
+            taskActivitySection.hidden = true;
+            taskActivityList.innerHTML = "";
+            taskModalDialog.classList.remove("modal-dialog--compact");
             taskModal.classList.add("hidden");
             taskModal.setAttribute("aria-hidden", "true");
         }
@@ -831,6 +1216,7 @@
 
                 clearFeedback();
                 renderBoard(tasks, boardState);
+                fetchActivity();
             } catch (error) {
                 tasks = tasks.map((task) => task.id === taskId ? { ...task, status: previousStatus } : task);
                 setFeedback("The task could not be moved because the server is unavailable. Please try again.");
@@ -935,8 +1321,93 @@
             draggedTaskId = null;
         }
 
+        function hasActiveFilters() {
+            return Boolean(
+                filterState.search.trim()
+                || filterState.status
+                || filterState.priority
+                || filterState.assignee.trim()
+            );
+        }
+
+        function syncFilterControls() {
+            filterSearch.value = filterState.search;
+            filterStatus.value = filterState.status;
+            filterPriority.value = filterState.priority;
+            filterAssignee.value = filterState.assignee;
+            filterClearButton.disabled = !hasActiveFilters();
+        }
+
+        function buildTaskQueryParams() {
+            const params = new URLSearchParams();
+            const search = filterState.search.trim();
+            const assignee = filterState.assignee.trim();
+
+            if (search) {
+                params.set("search", search);
+            }
+            if (filterState.status) {
+                params.set("status", filterState.status);
+            }
+            if (filterState.priority) {
+                params.set("priority", filterState.priority);
+            }
+            if (assignee) {
+                params.set("assignee", assignee);
+            }
+
+            return params;
+        }
+
+        function readFilterStateFromControls() {
+            filterState.search = filterSearch.value;
+            filterState.status = filterStatus.value;
+            filterState.priority = filterPriority.value;
+            filterState.assignee = filterAssignee.value;
+            syncFilterControls();
+        }
+
+        function clearFilters() {
+            if (searchDebounceTimer) {
+                clearTimeout(searchDebounceTimer);
+                searchDebounceTimer = null;
+            }
+            filterState.search = "";
+            filterState.status = "";
+            filterState.priority = "";
+            filterState.assignee = "";
+            syncFilterControls();
+            fetchTasks();
+        }
+
+        function scheduleFilterFetch() {
+            readFilterStateFromControls();
+            if (searchDebounceTimer) {
+                clearTimeout(searchDebounceTimer);
+            }
+            searchDebounceTimer = setTimeout(() => {
+                searchDebounceTimer = null;
+                fetchTasks();
+            }, 300);
+        }
+
+        function attachFilterListeners() {
+            filterSearch.addEventListener("input", scheduleFilterFetch);
+            filterStatus.addEventListener("change", () => {
+                readFilterStateFromControls();
+                fetchTasks();
+            });
+            filterPriority.addEventListener("change", () => {
+                readFilterStateFromControls();
+                fetchTasks();
+            });
+            filterAssignee.addEventListener("input", scheduleFilterFetch);
+            filterClearButton.addEventListener("click", clearFilters);
+        }
+
         function attachModalListeners() {
             newTaskButton.addEventListener("click", () => openModal("create"));
+            activityRefreshButton.addEventListener("click", fetchActivity);
             taskModalCloseButton.addEventListener("click", closeModal);
             taskModalCancelButton.addEventListener("click", closeModal);
             taskModalForm.addEventListener("submit", handleTaskSubmit);
@@ -958,15 +1429,19 @@
             renderBoard([], boardState);
 
             try {
-                const response = await fetch(`${API_BASE}/tasks`);
+                const params = buildTaskQueryParams();
+                const query = params.toString();
+                const url = query ? `${API_BASE}/tasks?${query}` : `${API_BASE}/tasks`;
+                const response = await fetch(url);
                 if (!response.ok) {
                     throw new Error(`Request failed with status ${response.status}`);
                 }
 
                 const data = await response.json();
                 tasks = Array.isArray(data) ? data : [];
-                boardState = tasks.length === 0 ? "empty" : "ready";
+                boardState = tasks.length === 0 && !hasActiveFilters() ? "empty" : "ready";
                 renderBoard(tasks, boardState);
+                fetchActivity();
             } catch (error) {
                 console.error("Failed to load tasks", error);
                 tasks = [];
@@ -976,7 +1451,10 @@
         }
 
         attachModalListeners();
+        attachFilterListeners();
+        syncFilterControls();
         fetchTasks();
+        fetchActivity();
     </script>
 </body>
 </html>

@@ -2,9 +2,18 @@ from datetime import datetime, timezone
 from typing import Optional
 from uuid import uuid4
 
-from app.models import TaskCreate, TaskPriority, TaskResponse, TaskStatus, TaskUpdate
+from app.models import (
+    ActivityAction,
+    ActivityEvent,
+    TaskCreate,
+    TaskPriority,
+    TaskResponse,
+    TaskStatus,
+    TaskUpdate,
+)
 
 _tasks: dict[str, TaskResponse] = {}
+_activity_events: list[ActivityEvent] = []
 
 
 def add_task(payload: TaskCreate) -> TaskResponse:
@@ -62,5 +71,27 @@ def delete_task(task_id: str) -> bool:
     return False
 
 
+def log_activity(task_id: str, action: ActivityAction, details: str) -> ActivityEvent:
+    event = ActivityEvent(
+        id=str(uuid4()),
+        task_id=task_id,
+        action=action,
+        details=details,
+        timestamp=datetime.now(timezone.utc),
+    )
+    _activity_events.append(event)
+    return event
+
+
+def get_all_activity() -> list[ActivityEvent]:
+    return sorted(_activity_events, key=lambda e: e.timestamp, reverse=True)
+
+
+def get_activity_for_task(task_id: str) -> list[ActivityEvent]:
+    events = [e for e in _activity_events if e.task_id == task_id]
+    return sorted(events, key=lambda e: e.timestamp, reverse=True)
+
+
 def _reset() -> None:
     _tasks.clear()
+    _activity_events.clear()
