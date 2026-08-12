@@ -2,21 +2,12 @@
 # Entry point that creates and configures the FastAPI application instance.
 
 from fastapi import FastAPI, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware  # Import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 
 from app import storage
 from app.api.health import router as health_router
 from app.business_rules import validate_status_transition
 from app.models import TaskCreate, TaskPriority, TaskResponse, TaskStatus, TaskUpdate
-from app.core.config import settings
-
-from app.models import TaskStatus, TaskPriority, TaskResponse
-from app.models import TaskCreate, TaskPriority, TaskResponse, TaskStatus, TaskUpdate
-from app.business_rules import validate_status_transition
-from fastapi import status
-from app.models import TaskCreate, TaskResponse
-from app import storage
-
 
 
 # Create the FastAPI app instance.
@@ -34,25 +25,19 @@ def list_tasks(
 ) -> list[TaskResponse]:
     return storage.get_all_tasks(status=status, priority=priority)
 
+
 @app.post("/tasks", response_model=TaskResponse, status_code=status.HTTP_201_CREATED, tags=["tasks"])
 def create_task(payload: TaskCreate) -> TaskResponse:
     return storage.add_task(payload)
 
 
-
-@app.patch("/tasks/{task_id}", response_model=TaskResponse, tags=["tasks"])
-def update_task(task_id: str, payload: TaskUpdate) -> TaskResponse:
-    task = storage.update_task(task_id, payload)
+@app.get("/tasks/{task_id}", response_model=TaskResponse, tags=["tasks"])
+def get_task(task_id: str) -> TaskResponse:
+    task = storage.get_task_by_id(task_id)
     if task is None:
         raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
     return task
 
-# No imports to add — HTTPException, status, and storage are already imported.
-
-@app.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["tasks"])
-def delete_task(task_id: str) -> None:
-    if not storage.delete_task(task_id):
-        raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
 
 @app.patch("/tasks/{task_id}", response_model=TaskResponse, tags=["tasks"])
 def update_task(task_id: str, payload: TaskUpdate) -> TaskResponse:
@@ -60,11 +45,32 @@ def update_task(task_id: str, payload: TaskUpdate) -> TaskResponse:
         existing = storage.get_task_by_id(task_id)
         if existing is None:
             raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
+        # validate transition (may raise 422)
         validate_status_transition(existing.status, payload.status)
     task = storage.update_task(task_id, payload)
     if task is None:
         raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
     return task
+
+
+@app.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["tasks"])
+def delete_task(task_id: str) -> None:
+    if not storage.delete_task(task_id):
+        raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
+
+
+@app.get("/activity", tags=["activity"])
+def get_activity():
+    return storage.get_activity()
+
+
+@app.get("/tasks/{task_id}/activity", tags=["activity"])
+def get_task_activity(task_id: str):
+    # ensure task exists
+    if storage.get_task_by_id(task_id) is None:
+        raise HTTPException(status_code=404, detail=f"Task with id {task_id} not found")
+    return storage.get_task_activity(task_id)
+
 
 # Add CORS middleware
 app.add_middleware(
@@ -75,11 +81,10 @@ app.add_middleware(
         "http://localhost:5173",
         "null",
     ],
-    allow_methods=["*"],  # Allow all methods
-    allow_headers=["*"],  # Allow all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
 
 # Register the health check route.
 app.include_router(health_router)
-
-# ...existing code...
