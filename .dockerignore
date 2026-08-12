@@ -1,0 +1,44 @@
+# Version control
+.git
+.gitignore
+.github
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv
+.venv
+env
+.env
+.env.local
+*.egg-info
+dist
+build
+
+# Testing
+.pytest_cache
+.coverage
+htmlcov
+tests
+
+# Node.js (if present)
+node_modules
+
+# IDE and Editor
+.vscode
+.idea
+*.swp
+*.swo
+*.swn
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Misc
+*.log
+README.md
