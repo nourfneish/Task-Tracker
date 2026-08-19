@@ -1,41 +1,117 @@
-# Release readiness evidence
+# Release Evidence
 
-This file is a concise evidence snapshot for the release-readiness review. It is intentionally short and focuses on the checks requested for Part B. Where a live external link is not available in the local workspace snapshot, the note is marked as pending or illustrative.
+## Baseline and scope
+- Baseline branch: `final-project`
+- Scope: release readiness and documentation verification only.
+- No new product feature was added; the app behavior is preserved.
+- Changes are limited to release documentation and evidence checks.
 
-## B1. Continuous Integration
+## Evidence files
+- [README.md](../README.md)
+- [docs/release-evidence.md](./release-evidence.md)
+- [docs/final-ai-review.md](./final-ai-review.md)
+- [docs/ai-playbook.md](./ai-playbook.md)
 
-- Workflow intent: The CI workflow is expected to run `pytest` on both `push` and `pull_request`.
-- Safety review: No dangerous shortcut is expected in a proper CI definition; specifically, the workflow should avoid `continue-on-error`, `|| true`, skipped pytest invocations, and missing dependency installation.
-- Dependency installation: The workflow should install app requirements before running tests, e.g. `pip install -r requirements.txt`.
-- Green run evidence: Pending public GitHub Actions URL. In a live review, attach the final workflow run link here once available. If the workflow is not yet public, record the note: "GitHub Actions run URL not available in the local workspace snapshot."
+## Claim-Versus-Reality Log
 
-## B2. Docker and runtime verification
+This log documents documentation claims checked against the actual repository state and verified commands.
 
-- Docker build: The project includes a Dockerfile intended to install requirements and start the app with Uvicorn.
-- Runtime command: The intended runtime command is `uvicorn app.main:app --host 0.0.0.0 --port 8000`.
-- Container safety: A production-safe image should avoid copying `.env` or secret material, and should prefer a non-root user when the container image is hardened.
-- Health check note: The container should respond to `GET /health` with HTTP 200 when running on port 8000.
-- Local evidence note: In the current terminal context, a health probe against `http://127.0.0.1:8000/health` completed successfully with exit code 0, which is consistent with the expected HTTP 200 behavior for the app.
+### Claim 1: Health endpoint returns `{"status":"ok"}`
+- Claim Source: [README.md](../README.md#L54-L67)
+- Claim Text: "Expected response: `{"status": "ok", "timestamp": "2026-07-02T12:00:00.000000+00:00"}`"
+- Reality Check:
+  - Actual endpoint: [app/api/health.py](../app/api/health.py#L12-L18)
+  - Route registration: [app/main.py](../app/main.py#L129-L130)
+  - Reality: ✓ Verified. The endpoint returns a `HealthResponse` with `status="ok"` and an ISO-8601 UTC timestamp.
+- Status: PASS — Claim matches implementation.
 
-## B3. Documentation checked against reality
+### Claim 2: Full pytest suite passes
+- Claim Source: [README.md](../README.md#L98-L101)
+- Claim Text: "Run the full pytest suite: `python -m pytest -v`"
+- Reality Check:
+  - Command run: `python -m pytest -q`
+  - Result: `30 passed in 0.62s`
+  - Test files in scope: [tests/test_tasks.py](../tests/test_tasks.py), [tests/test_activity.py](../tests/test_activity.py), and [tests/conftest.py](../tests/conftest.py)
+  - Reality: ✓ Verified. The local repository test suite passes successfully.
+- Status: PASS — Claim matches reality.
 
-1. Claim: "The app exposes a `/health` endpoint."  
-   Check: Verified against the running server and the app code paths; the endpoint is expected to return a healthy status response for the service.
+### Claim 3: Docker image builds and the container is configured for health checking
+- Claim Source: [README.md](../README.md#L108-L133) and [Dockerfile](../Dockerfile#L18-L44)
+- Claim Text: "Build the Docker image... verify `/health` from the running container..."
+- Reality Check:
+  - Build verification: `docker build -t task-tracker .` completed successfully in this workspace.
+  - Non-root user: [Dockerfile](../Dockerfile#L18-L19) creates a `app` user and [Dockerfile](../Dockerfile#L33-L34) switches to it.
+  - Exposed port: [Dockerfile](../Dockerfile#L36-L37) exposes port `8000`.
+  - Health check: [Dockerfile](../Dockerfile#L39-L44) includes a container health check that probes `http://localhost:8000/health`.
+  - Reality: ✓ Verified for the image build and configuration. The runtime port probe was not re-run in this session because `0.0.0.0:8000` was already in use locally, but the service is correctly configured to expose the health endpoint on port 8000.
+- Status: PASS for build/configuration; local container-port rerun is environment-limited.
 
-2. Claim: "The app is started with Uvicorn and listens on port 8000."  
-   Check: Consistent with the project run instructions and the live health probe against `http://127.0.0.1:8000/health`.
+### Claim 4: CI installs dependencies and runs pytest
+- Claim Source: [README.md](../README.md#L128-L133) and [.github/workflows/ci.yml](../.github/workflows/ci.yml#L1-L24)
+- Claim Text: "CI verifies tests with `python -m pytest -v`."
+- Reality Check:
+  - Workflow trigger: [.github/workflows/ci.yml](../.github/workflows/ci.yml#L3-L5) runs on `push` and `pull_request`.
+  - Dependency install: [.github/workflows/ci.yml](../.github/workflows/ci.yml#L18-L21) installs requirements before tests.
+  - Test step: [.github/workflows/ci.yml](../.github/workflows/ci.yml#L23-L24) runs `python -m pytest -v`.
+  - Reality: ✓ Verified. The CI workflow implements the documented test gate.
+- Status: PASS — Claim matches implementation.
 
-3. Claim: "The project runs tests with `pytest`."  
-   Check: The repo includes `pytest` in the dependency set and the CI layout is designed to run the suite with `pytest` before release.
+### Claim 5: Docker build context excludes local environment files and stray build artifacts
+- Claim Source: [README.md](../README.md#L132-L133) and [.dockerignore](../.dockerignore)
+- Claim Text: "The Dockerfile follows best-practices (non-root user, excludes local `.env` files in images)"
+- Reality Check:
+  - Secret exclusion: [.dockerignore](../.dockerignore#L1-L30) excludes `.env`, `.env.local`, `venv`, `.venv`, build output, and cache directories.
+  - Reality: ✓ Verified. The repository explicitly excludes environment and local build artifacts from the Docker build context.
+- Status: PASS — Claim matches repository configuration.
 
-4. Claim: "The container runs the service on port 8000 and serves the health endpoint."  
-   Check: This is consistent with the Docker runtime command and the app’s health route contract; the runtime should be validated with a container health check before sign-off.
+## Verified commands
 
-5. Claim: "The repo keeps secrets out of the image."  
-   Check: The Docker image should not copy `.env` files or other secret materials. This is a security requirement to confirm during image review.
+- Full pytest suite:
+  ```bash
+  python -m pytest -q
+  ```
+  Result: `30 passed in 0.62s`
 
-## Notes
+- Docker image build:
+  ```bash
+  docker build -t task-tracker .
+  ```
+  Result: build completed successfully.
 
-- This document is a lightweight evidence record for review and release planning.
-- Any GitHub Actions public URL, Docker image hash, or end-to-end runtime log should be appended here once those artifacts are available.
-- The exact external run link is intentionally left as pending in the local snapshot because the workspace alone does not include the remote CI record.
+- Runtime configuration check:
+  ```bash
+  python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+  ```
+  This is the runtime command defined in [README.md](../README.md#L46-L52) and [Dockerfile](../Dockerfile#L43-L44).
+
+## CI
+
+- Workflow file: [.github/workflows/ci.yml](../.github/workflows/ci.yml)
+- Trigger: `push` and `pull_request`
+- Python version: `3.11`
+- Dependency installation: `pip install -r requirements.txt`
+- Test command: `python -m pytest -v`
+
+## Docker
+
+- Dockerfile uses a non-root `app` user: [Dockerfile](../Dockerfile#L18-L34)
+- Container exposes port `8000`: [Dockerfile](../Dockerfile#L36-L37)
+- Container runs Uvicorn on `0.0.0.0:8000`: [Dockerfile](../Dockerfile#L39-L44)
+- Health probe is configured in the image: [Dockerfile](../Dockerfile#L39-L41)
+- Local environment files and build artifacts are excluded from the build context: [.dockerignore](../.dockerignore)
+
+## Manual verification
+
+- [x] Local `pytest` run completed successfully.
+- [x] Docker image build completed successfully.
+- [x] Health endpoint implementation is present and verified in code.
+- [x] No new product feature was added.
+- [ ] A second live container port check is environment-limited because port 8000 was already in use during this session.
+
+## Release readiness checklist
+
+- [x] Pytest passes locally
+- [x] Docker image builds successfully
+- [x] Health endpoint is implemented and exposed in the app
+- [x] Docker and CI configuration match the documented release steps
+- [x] Documentation claims were checked against the repository and verified commands

@@ -11,7 +11,21 @@ router = APIRouter()
 
 @router.get("/health", response_model=HealthResponse)
 def get_health() -> HealthResponse:
-    """Return the current service status and UTC timestamp in ISO 8601 format."""
+    """Return the current health status and timestamp for the API.
+
+    Args:
+        None.
+
+    Returns:
+        HealthResponse: A payload indicating the service is running and the
+            current UTC time in ISO 8601 format.
+
+    Raises:
+        None.
+
+    Example:
+        GET /health
+    """
     return HealthResponse(
         status="ok",
         timestamp=datetime.now(timezone.utc).isoformat(),

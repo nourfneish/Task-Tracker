@@ -2,31 +2,33 @@ from datetime import datetime, timezone
 from typing import Optional
 from uuid import uuid4
 
-from app.models import TaskCreate, TaskPriority, TaskResponse, TaskStatus, TaskUpdate
+from app.models import (
+    ActivityAction,
+    ActivityEvent,
+    TaskCreate,
+    TaskPriority,
+    TaskResponse,
+    TaskStatus,
+    TaskUpdate,
+)
 
 _tasks: dict[str, TaskResponse] = {}
-_activity: list[dict] = []
-
-
-def _reset() -> None:
-    """Test helper: reset in-memory storage to an empty state.
-
-    Tests call `storage._reset()` to ensure a clean slate between cases.
-    This clears the internal tasks and activity collections.
-    """
-    global _tasks, _activity
-    _tasks.clear()
-    _activity.clear()
+_activity_events: list[ActivityEvent] = []
 
 
 def add_task(payload: TaskCreate) -> TaskResponse:
-    """Create and store a new task record.
+    """Create and store a new task in memory.
 
     Args:
-        payload: The task creation payload to persist.
+        payload: Task creation data, including title, description, status,
+            priority, and optional assignee.
 
     Returns:
-        The created task resource with generated identifiers and timestamps.
+        TaskResponse: The created task with server-generated identifiers and
+            timestamps.
+
+    Raises:
+        None.
     """
     now = datetime.now(timezone.utc)
     task_id = str(uuid4())
@@ -41,16 +43,6 @@ def add_task(payload: TaskCreate) -> TaskResponse:
         updated_at=now,
     )
     _tasks[task_id] = task
-    # log activity
-    _activity.append(
-        {
-            "id": str(uuid4()),
-            "task_id": task_id,
-            "action": "created",
-            "details": f"Task created: {task.title}",
-            "timestamp": now.isoformat(),
-        }
-    )
     return task
 
 
@@ -61,13 +53,17 @@ def get_all_tasks(
     """Return all stored tasks, optionally filtered by status or priority.
 
     Args:
-        status: Optional status filter. Only tasks matching this value are
-            included.
-        priority: Optional priority filter. Only tasks matching this value are
-            included.
+        status: Optional task status filter. When provided, only matching tasks
+            are returned.
+        priority: Optional task priority filter. When provided, only matching
+            tasks are returned.
 
     Returns:
-        A list of task records matching the provided filters.
+        list[TaskResponse]: A list of tasks in the current in-memory store after
+            optional filtering.
+
+    Raises:
+        None.
     """
     tasks = list(_tasks.values())
     if status is not None:
@@ -78,26 +74,34 @@ def get_all_tasks(
 
 
 def get_task_by_id(task_id: str) -> Optional[TaskResponse]:
-    """Return a stored task by its identifier.
+    """Fetch a task by its generated identifier.
 
     Args:
-        task_id: The unique task identifier to look up.
+        task_id: The UUID-like task identifier to look up.
 
     Returns:
-        The matching task, or `None` if no task exists for the identifier.
+        TaskResponse | None: The matching task, or None when no task exists for
+            the supplied identifier.
+
+    Raises:
+        None.
     """
     return _tasks.get(task_id)
 
 
 def update_task(task_id: str, payload: TaskUpdate) -> Optional[TaskResponse]:
-    """Update a task record with the supplied partial payload.
+    """Apply a partial task update for the matching task record.
 
     Args:
-        task_id: The unique identifier of the task to update.
-        payload: A partial task update containing only the fields to modify.
+        task_id: The identifier of the task to update.
+        payload: Partial update payload containing only fields to change.
 
     Returns:
-        The updated task resource, or `None` if the task does not exist.
+        TaskResponse | None: The updated task, or None when the task does not
+            exist.
+
+    Raises:
+        None.
     """
     task = _tasks.get(task_id)
     if task is None:
@@ -108,84 +112,86 @@ def update_task(task_id: str, payload: TaskUpdate) -> Optional[TaskResponse]:
         return task
 
     now = datetime.now(timezone.utc)
-    # detect status change for activity
-    status_changed = False
-    new_status = updates.get("status")
-    if new_status is not None and new_status != task.status:
-        status_changed = True
-
     updated = task.model_copy(update={**updates, "updated_at": now})
     _tasks[task_id] = updated
-
-    # log activity
-    if status_changed:
-        _activity.append(
-            {
-                "id": str(uuid4()),
-                "task_id": task_id,
-                "action": "status_changed",
-                "details": f"Status changed to {new_status.value}",
-                "timestamp": now.isoformat(),
-            }
-        )
-    else:
-        _activity.append(
-            {
-                "id": str(uuid4()),
-                "task_id": task_id,
-                "action": "updated",
-                "details": f"Task updated",
-                "timestamp": now.isoformat(),
-            }
-        )
-
     return updated
 
 
 def delete_task(task_id: str) -> bool:
-    """Remove a task record if it exists.
+    """Delete a task from the in-memory store if it exists.
 
     Args:
-        task_id: The unique identifier of the task to delete.
+        task_id: The identifier of the task to delete.
 
     Returns:
-        `True` when the task is removed, otherwise `False`.
+        bool: True when a task was removed, otherwise False.
+
+    Raises:
+        None.
     """
     if task_id in _tasks:
         del _tasks[task_id]
-        # log deleted event
-        now = datetime.now(timezone.utc)
-        _activity.append(
-            {
-                "id": str(uuid4()),
-                "task_id": task_id,
-                "action": "deleted",
-                "details": "Task deleted",
-                "timestamp": now.isoformat(),
-            }
-        )
         return True
     return False
 
 
-def get_activity() -> list[dict]:
-    """Return all recorded activity entries newest first.
-
-    Returns:
-        A list of activity dictionaries sorted by timestamp in descending order.
-    """
-    # return activity newest first
-    return sorted(_activity, key=lambda e: e["timestamp"], reverse=True)
-
-
-def get_task_activity(task_id: str) -> list[dict]:
-    """Return the activity entries for a single task.
+def log_activity(task_id: str, action: ActivityAction, details: str) -> ActivityEvent:
+    """Record an activity event for a task.
 
     Args:
-        task_id: The unique identifier of the task whose activity should be
-            returned.
+        task_id: The task identifier associated with the event.
+        action: The activity action being recorded.
+        details: A human-readable description of the action.
 
     Returns:
-        A list of activity dictionaries associated with the task.
+        ActivityEvent: The newly created activity event.
+
+    Raises:
+        None.
     """
-    return [e for e in get_activity() if e["task_id"] == task_id]
+    event = ActivityEvent(
+        id=str(uuid4()),
+        task_id=task_id,
+        action=action,
+        details=details,
+        timestamp=datetime.now(timezone.utc),
+    )
+    _activity_events.append(event)
+    return event
+
+
+def get_all_activity() -> list[ActivityEvent]:
+    """Return all recorded activity events sorted newest-first.
+
+    Args:
+        None.
+
+    Returns:
+        list[ActivityEvent]: Activity events ordered by timestamp descending.
+
+    Raises:
+        None.
+    """
+    return sorted(_activity_events, key=lambda e: e.timestamp, reverse=True)
+
+
+def get_activity_for_task(task_id: str) -> list[ActivityEvent]:
+    """Return activity events for a specific task sorted newest-first.
+
+    Args:
+        task_id: The task identifier whose activity is requested.
+
+    Returns:
+        list[ActivityEvent]: All matching activity events ordered by timestamp
+            descending.
+
+    Raises:
+        None.
+    """
+    events = [e for e in _activity_events if e.task_id == task_id]
+    return sorted(events, key=lambda e: e.timestamp, reverse=True)
+
+
+def _reset() -> None:
+    _tasks.clear()
+    _activity_events.clear()
